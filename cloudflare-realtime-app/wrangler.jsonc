@@ -30,12 +30,20 @@
 			"binding": "DB",
 			"database_name": "realtime-voting-db",
 			"database_id": "placeholder-replace-with-actual-id"
+		},
+		{
+			"binding": "realtime_voting_db",
+			"database_name": "realtime-voting-db",
+			"database_id": "a580168b-8919-4847-a1af-3e88ac48bc57"
 		}
 	],
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_sqlite_classes": ["VotingDurableObject", "RealtimeDurableObject"]
+			"new_sqlite_classes": [
+				"VotingDurableObject",
+				"RealtimeDurableObject"
+			]
 		}
 	]
 }

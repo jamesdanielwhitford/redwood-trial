@@ -149,3 +149,50 @@ npx wrangler d1 migrations apply realtime-voting-db --local
 # Apply migrations (production)
 npx wrangler d1 migrations apply realtime-voting-db --remote
 ```
+
+
+
+
+```
+~/ cloudflare-realtime-app npx wrangler d1 create realtime-voting-db
+
+ ⛅️ wrangler 4.35.0
+───────────────────
+✅ Successfully created DB 'realtime-voting-db' in region WEUR
+Created your new D1 database.
+
+To access your new D1 Database in your Worker, add the following snippet to your configuration file:
+{
+  "d1_databases": [
+    {
+      "binding": "realtime_voting_db",
+      "database_name": "realtime-voting-db",
+      "database_id": "a580168b-8919-4847-a1af-3e88ac48bc57"
+    }
+  ]
+}
+✔ Would you like Wrangler to add it on your behalf? › Yes
+```
+
+
+```
+~/ cloudflare-realtime-app npx wrangler d1 migrations apply realtime-voting-db --local
+
+ ⛅️ wrangler 4.35.0
+───────────────────
+Migrations to be applied:
+┌────────────────┐
+│ name           │
+├────────────────┤
+│ 0001_votes.sql │
+└────────────────┘
+✔ About to apply 1 migration(s)
+Your database may not be available to serve requests during the migration, continue? … yes
+🌀 Executing on local database realtime-voting-db (placeholder-replace-with-actual-id) from .wrangler/state/v3/d1:
+🌀 To execute on your remote database, add a --remote flag to your wrangler command.
+🚣 4 commands executed successfully.
+┌────────────────┬────────┐
+│ name           │ status │
+├────────────────┼────────┤
+│ 0001_votes.sql │ ✅     │
+```
