@@ -12,7 +12,7 @@ import { realtimeRoute, renderRealtimeClients } from "rwsdk/realtime/worker";
 import Counter from "@/app/pages/counter/Counter";
 export { SessionDurableObject } from "./session/durableObject";
 export { RealtimeDurableObject } from "rwsdk/realtime/durableObject";
-export { CounterDurableObject } from "@/counterDurableObject";
+export { CounterDurableObject } from "./counterDurableObject";
 
 export type AppContext = {
   session: Session | null;
