@@ -27,6 +27,7 @@ model User {
   createdAt   DateTime    @default(now())
 
   credentials Credential[] // Relationship: One user can have many credentials
+  polls       Poll[]       // Relationship: One user can create many polls
 }
 
 model Credential {
@@ -40,4 +41,42 @@ model Credential {
   
   @@index([credentialId])
   @@index([userId])
+}
+
+model Poll {
+  id        String   @id @default(uuid()) // Poll ID (UUID-based)
+  title     String   // Poll title/question
+  createdAt DateTime @default(now())
+  createdBy String   // User ID who created this poll
+  user      User     @relation(fields: [createdBy], references: [id])
+  
+  choices   Choice[] // Relationship: One poll can have many choices
+  
+  @@index([createdBy])
+}
+
+model Choice {
+  id     String @id @default(uuid()) // Choice ID (UUID-based)
+  text   String // Choice text description
+  emoji  String // Emoji for this choice
+  color  String // Color for this choice (hex or named)
+  pollId String // Poll this choice belongs to
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  
+  votes  Vote[] // Relationship: One choice can have many votes
+  
+  @@index([pollId])
+}
+
+model Vote {
+  id              String   @id @default(uuid()) // Vote ID (UUID-based)
+  choiceId        String   // Choice that was voted for
+  choice          Choice   @relation(fields: [choiceId], references: [id], onDelete: Cascade)
+  voterIdentifier String   // Anonymous identifier for voter (e.g., browser fingerprint)
+  createdAt       DateTime @default(now())
+  
+  // Each voter can only vote once per poll (enforced via unique constraint)
+  @@unique([choiceId, voterIdentifier])
+  @@index([choiceId])
+  @@index([voterIdentifier])
 }

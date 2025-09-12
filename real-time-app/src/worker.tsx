@@ -10,6 +10,9 @@ import { type User, db, setupDb } from "@/db";
 import { env } from "cloudflare:workers";
 import { realtimeRoute, renderRealtimeClients } from "rwsdk/realtime/worker";
 import VotingApp from "./app/pages/voting/VotingApp";
+import { NewPoll } from "./app/pages/poll/NewPoll";
+import PollPage from "./app/pages/poll/PollPage";
+import { vote } from "./app/pages/poll/functions";
 export { SessionDurableObject } from "./session/durableObject";
 export { RealtimeDurableObject } from "rwsdk/realtime/durableObject";
 export { VotingDurableObject } from "./votingDurableObject";
@@ -63,6 +66,41 @@ export default defineApp([
 
     return new Response(null, { status: 200 });
   }),
+  route("/api/poll/:pollId/vote", async ({ request, params }) => {
+    if (request.method !== "POST") {
+      return new Response(null, { status: 405 });
+    }
+
+    try {
+      const { choiceId, voterIdentifier } = await request.json();
+      
+      if (!choiceId || !voterIdentifier) {
+        return new Response(JSON.stringify({ error: "Missing choiceId or voterIdentifier" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      await vote(choiceId, voterIdentifier);
+
+      // Trigger real-time updates for this poll
+      await renderRealtimeClients({
+        durableObjectNamespace: env.REALTIME_DURABLE_OBJECT,
+        key: `/poll/${params.pollId}`,
+      });
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Vote error:", error);
+      return new Response(JSON.stringify({ error: "Failed to vote" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }),
   async ({ ctx, request, headers }) => {
     await setupDb(env);
     setupSessionStore(env);
@@ -105,6 +143,8 @@ export default defineApp([
       Home,
     ]),
     route("/voting", VotingApp),
+    route("/polls/new", [isAuthenticated, NewPoll]),
+    route("/poll/:pollId", PollPage),
     prefix("/user", userRoutes),
   ]),
 ]);

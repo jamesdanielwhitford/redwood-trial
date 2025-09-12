@@ -64,45 +64,63 @@ export async function finishPasskeyRegistration(
   username: string,
   registration: RegistrationResponseJSON,
 ) {
-  const { request, response } = requestInfo;
-  const { origin } = new URL(request.url);
+  try {
+    const { request, response } = requestInfo;
+    const { origin } = new URL(request.url);
 
-  const session = await sessions.load(request);
-  const challenge = session?.challenge;
+    const session = await sessions.load(request);
+    const challenge = session?.challenge;
 
-  if (!challenge) {
+    if (!challenge) {
+      console.error("No challenge found in session");
+      return false;
+    }
+
+    // Check if username already exists
+    const existingUser = await db.user.findUnique({
+      where: { username },
+    });
+
+    if (existingUser) {
+      console.error("Username already exists:", username);
+      return false;
+    }
+
+    const verification = await verifyRegistrationResponse({
+      response: registration,
+      expectedChallenge: challenge,
+      expectedOrigin: origin,
+      expectedRPID: env.WEBAUTHN_RP_ID || new URL(request.url).hostname,
+    });
+
+    if (!verification.verified || !verification.registrationInfo) {
+      console.error("Registration verification failed:", verification);
+      return false;
+    }
+
+    await sessions.save(response.headers, { challenge: null });
+
+    const user = await db.user.create({
+      data: {
+        username,
+      },
+    });
+
+    await db.credential.create({
+      data: {
+        userId: user.id,
+        credentialId: verification.registrationInfo.credential.id,
+        publicKey: verification.registrationInfo.credential.publicKey,
+        counter: verification.registrationInfo.credential.counter,
+      },
+    });
+
+    console.log("User registered successfully:", username);
+    return true;
+  } catch (error) {
+    console.error("Registration error:", error);
     return false;
   }
-
-  const verification = await verifyRegistrationResponse({
-    response: registration,
-    expectedChallenge: challenge,
-    expectedOrigin: origin,
-    expectedRPID: env.WEBAUTHN_RP_ID || new URL(request.url).hostname,
-  });
-
-  if (!verification.verified || !verification.registrationInfo) {
-    return false;
-  }
-
-  await sessions.save(response.headers, { challenge: null });
-
-  const user = await db.user.create({
-    data: {
-      username,
-    },
-  });
-
-  await db.credential.create({
-    data: {
-      userId: user.id,
-      credentialId: verification.registrationInfo.credential.id,
-      publicKey: verification.registrationInfo.credential.publicKey,
-      counter: verification.registrationInfo.credential.counter,
-    },
-  });
-
-  return true;
 }
 
 export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {

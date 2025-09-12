@@ -8,11 +8,10 @@ cd real-time-app
 npm install
 ```
 
-```
-npm run migrate:new -- "add polls votes and choices"   
-```
 
+Adding pole to database:
 
 ```
-npm install uuid
+npm run migrate:dev
+npm run migrate:new "add-poll-system" 
 ```

@@ -18,36 +18,64 @@ export function Login() {
   const [isPending, startTransition] = useTransition();
 
   const passkeyLogin = async () => {
-    // 1. Get a challenge from the worker
-    const options = await startPasskeyLogin();
+    try {
+      setResult("Starting login...");
 
-    // 2. Ask the browser to sign the challenge
-    const login = await startAuthentication({ optionsJSON: options });
+      // 1. Get a challenge from the worker
+      const options = await startPasskeyLogin();
+      
+      setResult("Authenticating with passkey...");
 
-    // 3. Give the signed challenge to the worker to finish the login process
-    const success = await finishPasskeyLogin(login);
+      // 2. Ask the browser to sign the challenge
+      const login = await startAuthentication({ optionsJSON: options });
+      
+      setResult("Finishing login...");
 
-    if (!success) {
-      setResult("Login failed");
-    } else {
-      window.location.href = "/";
+      // 3. Give the signed challenge to the worker to finish the login process
+      const success = await finishPasskeyLogin(login);
+
+      if (!success) {
+        setResult("Login failed - please try again");
+      } else {
+        setResult("Login successful! Redirecting...");
+        window.location.href = "/";
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setResult(`Login error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const passkeyRegister = async () => {
-    // 1. Get a challenge from the worker
-    const options = await startPasskeyRegistration(username);
+    try {
+      if (!username.trim()) {
+        setResult("Please enter a username");
+        return;
+      }
 
-    // 2. Ask the browser to sign the challenge
-    const registration = await startRegistration({ optionsJSON: options });
+      setResult("Starting registration...");
 
-    // 3. Give the signed challenge to the worker to finish the registration process
-    const success = await finishPasskeyRegistration(username, registration);
+      // 1. Get a challenge from the worker
+      const options = await startPasskeyRegistration(username);
+      
+      setResult("Creating passkey...");
 
-    if (!success) {
-      setResult("Registration failed");
-    } else {
-      setResult("Registration successful!");
+      // 2. Ask the browser to sign the challenge
+      const registration = await startRegistration({ optionsJSON: options });
+      
+      setResult("Finishing registration...");
+
+      // 3. Give the signed challenge to the worker to finish the registration process
+      const success = await finishPasskeyRegistration(username, registration);
+
+      if (!success) {
+        setResult("Registration failed - please try again");
+      } else {
+        setResult("Registration successful! You can now login.");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setResult(`Registration error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
