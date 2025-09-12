@@ -1,8 +1,10 @@
 import { DurableObject } from 'cloudflare:workers';
+import { PollVoteData } from './PollDurableObject';
 
 interface SessionData {
   id: string;
   connectedAt: number;
+  pollId?: string;
 }
 
 export class RealtimeDurableObject extends DurableObject {
@@ -71,8 +73,8 @@ export class RealtimeDurableObject extends DurableObject {
     }
 
     if (url.pathname === "/broadcast-vote-update") {
-      // Handle vote update broadcasts
-      const voteData = await request.json() as { dog: number; cat: number };
+      // Handle poll vote update broadcasts
+      const voteData = await request.json() as PollVoteData;
       this.broadcastVoteUpdate(voteData);
       return new Response("Vote update broadcasted");
     }
@@ -144,10 +146,10 @@ export class RealtimeDurableObject extends DurableObject {
     return this.ctx.getWebSockets().length;
   }
 
-  // Broadcast vote update to all connected clients
-  broadcastVoteUpdate(votes: { dog: number; cat: number }): void {
+  // Broadcast poll vote update to all connected clients
+  broadcastVoteUpdate(votes: PollVoteData): void {
     const message = JSON.stringify({
-      type: "vote-update",
+      type: "poll-vote-update",
       votes: votes,
       timestamp: Date.now()
     });

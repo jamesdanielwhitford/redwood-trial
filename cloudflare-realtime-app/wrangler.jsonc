@@ -16,8 +16,8 @@
 	"durable_objects": {
 		"bindings": [
 			{
-				"name": "VOTING_DURABLE_OBJECT",
-				"class_name": "VotingDurableObject"
+				"name": "POLL_DURABLE_OBJECT",
+				"class_name": "PollDurableObject"
 			},
 			{
 				"name": "REALTIME_DURABLE_OBJECT",
@@ -43,6 +43,12 @@
 			"new_sqlite_classes": [
 				"VotingDurableObject",
 				"RealtimeDurableObject"
+			]
+		},
+		{
+			"tag": "v2",
+			"new_sqlite_classes": [
+				"PollDurableObject"
 			]
 		}
 	]

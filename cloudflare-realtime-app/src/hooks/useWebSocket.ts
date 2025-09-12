@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-export interface VoteData {
-  dog: number;
-  cat: number;
+export interface PollVoteData {
+  [choiceId: string]: number;
 }
 
 export interface WebSocketMessage {
@@ -11,17 +10,15 @@ export interface WebSocketMessage {
 }
 
 export interface UseWebSocketReturn {
-  votes: VoteData | null;
+  votes: PollVoteData | null;
   isConnected: boolean;
   connectionCount: number;
   error: string | null;
   reconnect: () => void;
 }
 
-const WEBSOCKET_URL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
-
-export function useWebSocket(): UseWebSocketReturn {
-  const [votes, setVotes] = useState<VoteData | null>(null);
+export function useWebSocket(pollId?: string): UseWebSocketReturn {
+  const [votes, setVotes] = useState<PollVoteData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionCount, setConnectionCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +28,14 @@ export function useWebSocket(): UseWebSocketReturn {
   const maxReconnectAttempts = 5;
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
+    if (!pollId || wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
 
     try {
       setError(null);
-      const ws = new WebSocket(WEBSOCKET_URL);
+      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/${pollId}`;
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -54,7 +52,7 @@ export function useWebSocket(): UseWebSocketReturn {
           const message: WebSocketMessage = JSON.parse(event.data);
           
           switch (message.type) {
-            case 'vote-update':
+            case 'poll-vote-update':
               if (message.votes) {
                 setVotes(message.votes);
               }
@@ -113,7 +111,7 @@ export function useWebSocket(): UseWebSocketReturn {
       console.error('Error creating WebSocket connection:', error);
       setError('Failed to create WebSocket connection');
     }
-  }, []);
+  }, [pollId]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -135,23 +133,25 @@ export function useWebSocket(): UseWebSocketReturn {
     connect();
   }, [connect, disconnect]);
 
-  // Load initial vote data from API
+  // Load initial poll vote data from durable object if pollId is provided
   useEffect(() => {
-    fetch('/api/votes')
-      .then(res => res.json())
-      .then(data => setVotes(data))
-      .catch(error => console.error('Error loading initial votes:', error));
-  }, []);
+    if (pollId) {
+      // For polls, we'll get the initial votes from the durable object via WebSocket
+      // or we could fetch from /api/polls/{pollId} if needed
+    }
+  }, [pollId]);
 
   // Establish WebSocket connection
   useEffect(() => {
-    connect();
+    if (pollId) {
+      connect();
+    }
 
     // Cleanup on unmount
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
+  }, [connect, disconnect, pollId]);
 
   // Ping interval to keep connection alive
   useEffect(() => {
