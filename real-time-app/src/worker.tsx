@@ -9,10 +9,11 @@ import { Session } from "./session/durableObject";
 import { type User, db, setupDb } from "@/db";
 import { env } from "cloudflare:workers";
 import { realtimeRoute, renderRealtimeClients } from "rwsdk/realtime/worker";
-import VotingApp from "./app/pages/voting/VotingApp";
+import { createPoll } from "./app/pages/polls/functions";
+import Poll from "./app/pages/polls/Poll";
 export { SessionDurableObject } from "./session/durableObject";
 export { RealtimeDurableObject } from "rwsdk/realtime/durableObject";
-export { VotingDurableObject } from "./votingDurableObject";
+export { PollDurableObject } from "./pollDurableObject";
 
 export type AppContext = {
   session: Session | null;
@@ -31,38 +32,6 @@ const isAuthenticated = ({ ctx }: { ctx: AppContext}) => {
 export default defineApp([
   setCommonHeaders(),
   realtimeRoute(() => env.REALTIME_DURABLE_OBJECT),
-  route("/api/vote/dog", async ({ request }) => {
-    if (request.method !== "POST") {
-      return new Response(null, { status: 405 });
-    }
-
-    const doId = env.VOTING_DURABLE_OBJECT.idFromName("global-voting");
-    const votingDO = env.VOTING_DURABLE_OBJECT.get(doId);
-    await votingDO.voteDog();
-
-    await renderRealtimeClients({
-      durableObjectNamespace: env.REALTIME_DURABLE_OBJECT,
-      key: "/voting",
-    });
-
-    return new Response(null, { status: 200 });
-  }),
-  route("/api/vote/cat", async ({ request }) => {
-    if (request.method !== "POST") {
-      return new Response(null, { status: 405 });
-    }
-
-    const doId = env.VOTING_DURABLE_OBJECT.idFromName("global-voting");
-    const votingDO = env.VOTING_DURABLE_OBJECT.get(doId);
-    await votingDO.voteCat();
-
-    await renderRealtimeClients({
-      durableObjectNamespace: env.REALTIME_DURABLE_OBJECT,
-      key: "/voting",
-    });
-
-    return new Response(null, { status: 200 });
-  }),
   async ({ ctx, request, headers }) => {
     await setupDb(env);
     setupSessionStore(env);
@@ -91,6 +60,51 @@ export default defineApp([
       });
     }
   },
+  route("/api/poll/create", async ({ request, ctx }) => {
+    if (request.method !== "POST") {
+      return new Response(null, { status: 405 });
+    }
+
+    if (!ctx.user) {
+      return new Response(null, { status: 401 });
+    }
+
+    try {
+      const data = await request.json();
+      await createPoll(ctx.user.id, data);
+      return new Response(JSON.stringify({ success: true }), { 
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: "Failed to create poll" }), { 
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }),
+  route("/api/poll/:pollId/vote/:choiceId", async ({ request, params }) => {
+    if (request.method !== "POST") {
+      return new Response(null, { status: 405 });
+    }
+
+    const { pollId, choiceId } = params as { pollId: string; choiceId: string };
+
+    try {
+      const doId = env.POLL_DURABLE_OBJECT.idFromName(pollId);
+      const pollDO = env.POLL_DURABLE_OBJECT.get(doId);
+      await pollDO.vote(choiceId);
+
+      await renderRealtimeClients({
+        durableObjectNamespace: env.REALTIME_DURABLE_OBJECT,
+        key: `/poll/${pollId}`,
+      });
+
+      return new Response(null, { status: 200 });
+    } catch (error) {
+      return new Response(null, { status: 500 });
+    }
+  }),
   render(Document, [
     index([isAuthenticated, Home]),
     route("/protected", [
@@ -104,7 +118,7 @@ export default defineApp([
       },
       Home,
     ]),
-    route("/voting", VotingApp),
+    route("/poll/:pollId", Poll),
     prefix("/user", userRoutes),
   ]),
 ]);
