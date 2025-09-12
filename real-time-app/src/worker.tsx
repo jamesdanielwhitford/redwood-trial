@@ -9,10 +9,10 @@ import { Session } from "./session/durableObject";
 import { type User, db, setupDb } from "@/db";
 import { env } from "cloudflare:workers";
 import { realtimeRoute, renderRealtimeClients } from "rwsdk/realtime/worker";
-import Counter from "@/app/pages/counter/Counter";
+import VotingApp from "./app/pages/voting/VotingApp";
 export { SessionDurableObject } from "./session/durableObject";
 export { RealtimeDurableObject } from "rwsdk/realtime/durableObject";
-export { CounterDurableObject } from "./counterDurableObject";
+export { VotingDurableObject } from "./votingDurableObject";
 
 export type AppContext = {
   session: Session | null;
@@ -31,34 +31,34 @@ const isAuthenticated = ({ ctx }: { ctx: AppContext}) => {
 export default defineApp([
   setCommonHeaders(),
   realtimeRoute(() => env.REALTIME_DURABLE_OBJECT),
-  route("/api/counter/increment", async ({ request }) => {
+  route("/api/vote/dog", async ({ request }) => {
     if (request.method !== "POST") {
       return new Response(null, { status: 405 });
     }
 
-    const doId = env.COUNTER_DURABLE_OBJECT.idFromName("global-counter");
-    const counterDO = env.COUNTER_DURABLE_OBJECT.get(doId);
-    await counterDO.increment();
+    const doId = env.VOTING_DURABLE_OBJECT.idFromName("global-voting");
+    const votingDO = env.VOTING_DURABLE_OBJECT.get(doId);
+    await votingDO.voteDog();
 
     await renderRealtimeClients({
       durableObjectNamespace: env.REALTIME_DURABLE_OBJECT,
-      key: "/counter",
+      key: "/voting",
     });
 
     return new Response(null, { status: 200 });
   }),
-  route("/api/counter/decrement", async ({ request }) => {
+  route("/api/vote/cat", async ({ request }) => {
     if (request.method !== "POST") {
       return new Response(null, { status: 405 });
     }
 
-    const doId = env.COUNTER_DURABLE_OBJECT.idFromName("global-counter");
-    const counterDO = env.COUNTER_DURABLE_OBJECT.get(doId);
-    await counterDO.decrement();
+    const doId = env.VOTING_DURABLE_OBJECT.idFromName("global-voting");
+    const votingDO = env.VOTING_DURABLE_OBJECT.get(doId);
+    await votingDO.voteCat();
 
     await renderRealtimeClients({
       durableObjectNamespace: env.REALTIME_DURABLE_OBJECT,
-      key: "/counter",
+      key: "/voting",
     });
 
     return new Response(null, { status: 200 });
@@ -104,7 +104,7 @@ export default defineApp([
       },
       Home,
     ]),
-    route("/counter", Counter),
+    route("/voting", VotingApp),
     prefix("/user", userRoutes),
   ]),
 ]);

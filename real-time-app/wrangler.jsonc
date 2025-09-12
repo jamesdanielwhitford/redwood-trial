@@ -21,8 +21,8 @@
         "class_name": "RealtimeDurableObject"
       },
       {
-        "name": "COUNTER_DURABLE_OBJECT",
-        "class_name": "CounterDurableObject"
+        "name": "VOTING_DURABLE_OBJECT", 
+        "class_name": "VotingDurableObject"
       }
     ]
   },
@@ -36,7 +36,7 @@
     },
     {
       "tag": "v2",
-      "new_sqlite_classes": ["RealtimeDurableObject", "CounterDurableObject"]
+      "new_sqlite_classes": ["RealtimeDurableObject", "VotingDurableObject"]
     }
   ],
   "d1_databases": [
