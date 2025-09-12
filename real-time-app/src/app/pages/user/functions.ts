@@ -63,12 +63,10 @@ export async function startPasskeyLogin() {
 export async function finishPasskeyRegistration(
   username: string,
   registration: RegistrationResponseJSON,
+  challenge: string,
 ) {
   const { request, response } = requestInfo;
   const { origin } = new URL(request.url);
-
-  const session = await sessions.load(request);
-  const challenge = session?.challenge;
 
   if (!challenge) {
     return false;
@@ -87,30 +85,31 @@ export async function finishPasskeyRegistration(
 
   await sessions.save(response.headers, { challenge: null });
 
-  const user = await db.user.create({
-    data: {
-      username,
-    },
-  });
+  try {
+    const user = await db.user.create({
+      data: {
+        username,
+      },
+    });
 
-  await db.credential.create({
-    data: {
-      userId: user.id,
-      credentialId: verification.registrationInfo.credential.id,
-      publicKey: verification.registrationInfo.credential.publicKey,
-      counter: verification.registrationInfo.credential.counter,
-    },
-  });
+    await db.credential.create({
+      data: {
+        userId: user.id,
+        credentialId: verification.registrationInfo.credential.id,
+        publicKey: verification.registrationInfo.credential.publicKey,
+        counter: verification.registrationInfo.credential.counter,
+      },
+    });
 
-  return true;
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
-export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {
-  const { request, response } = requestInfo;
+export async function finishPasskeyLogin(login: AuthenticationResponseJSON, challenge: string) {
+  const { request } = requestInfo;
   const { origin } = new URL(request.url);
-
-  const session = await sessions.load(request);
-  const challenge = session?.challenge;
 
   if (!challenge) {
     return false;
@@ -162,10 +161,5 @@ export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {
     return false;
   }
 
-  await sessions.save(response.headers, {
-    userId: user.id,
-    challenge: null,
-  });
-
-  return true;
+  return user.id;
 }

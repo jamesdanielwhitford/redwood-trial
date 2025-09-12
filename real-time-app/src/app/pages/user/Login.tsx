@@ -16,6 +16,7 @@ export function Login() {
   const [username, setUsername] = useState("");
   const [result, setResult] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [challenge, setChallenge] = useState<string | null>(null);
 
   const passkeyLogin = async () => {
     // 1. Get a challenge from the worker
@@ -25,24 +26,29 @@ export function Login() {
     const login = await startAuthentication({ optionsJSON: options });
 
     // 3. Give the signed challenge to the worker to finish the login process
-    const success = await finishPasskeyLogin(login);
+    const userId = await finishPasskeyLogin(login, options.challenge);
 
-    if (!success) {
+    if (!userId) {
       setResult("Login failed");
     } else {
-      window.location.href = "/";
+      setResult("Login successful! Redirecting...");
+      // Redirect to the login success endpoint which will set the session properly
+      window.location.href = `/user/login-success?userId=${userId}`;
     }
   };
 
   const passkeyRegister = async () => {
     // 1. Get a challenge from the worker
     const options = await startPasskeyRegistration(username);
+    
+    // Store the challenge temporarily for the finish call
+    setChallenge(options.challenge);
 
     // 2. Ask the browser to sign the challenge
     const registration = await startRegistration({ optionsJSON: options });
 
     // 3. Give the signed challenge to the worker to finish the registration process
-    const success = await finishPasskeyRegistration(username, registration);
+    const success = await finishPasskeyRegistration(username, registration, options.challenge);
 
     if (!success) {
       setResult("Registration failed");
