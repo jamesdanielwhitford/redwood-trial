@@ -8,3 +8,11 @@ cd real-time-app
 npm install
 ```
 
+```
+npm run migrate:new -- "add polls votes and choices"   
+```
+
+
+```
+npm install uuid
+```
