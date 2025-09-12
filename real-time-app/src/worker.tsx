@@ -1,5 +1,5 @@
 import { defineApp, ErrorResponse } from "rwsdk/worker";
-import { route, render, prefix } from "rwsdk/router";
+import { index, route, render, prefix } from "rwsdk/router";
 import { Document } from "@/app/Document";
 import { Home } from "@/app/pages/Home";
 import { setCommonHeaders } from "@/app/headers";
@@ -14,6 +14,15 @@ export type AppContext = {
   session: Session | null;
   user: User | null;
 };
+
+const isAuthenticated = ({ ctx }: { ctx: AppContext}) => {
+  if (!ctx.user) {
+    return new Response(null, {
+      status: 302,
+      headers: { Location: "/user/login" },
+    });
+  }
+}
 
 export default defineApp([
   setCommonHeaders(),
@@ -46,7 +55,7 @@ export default defineApp([
     }
   },
   render(Document, [
-    route("/", () => new Response("Hello, World!")),
+    index([isAuthenticated, Home]),
     route("/protected", [
       ({ ctx }) => {
         if (!ctx.user) {
