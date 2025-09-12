@@ -15,6 +15,14 @@
       {
         "name": "SESSION_DURABLE_OBJECT",
         "class_name": "SessionDurableObject"
+      },
+      {
+        "name": "REALTIME_DURABLE_OBJECT",
+        "class_name": "RealtimeDurableObject"
+      },
+      {
+        "name": "COUNTER_DURABLE_OBJECT",
+        "class_name": "CounterDurableObject"
       }
     ]
   },
@@ -25,6 +33,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["SessionDurableObject"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["RealtimeDurableObject", "CounterDurableObject"]
     }
   ],
   "d1_databases": [
