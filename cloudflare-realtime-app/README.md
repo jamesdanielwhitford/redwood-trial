@@ -1,69 +1,141 @@
-# React + TypeScript + Vite
+# Cloudflare Workers Real-Time Voting App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time voting application (Dogs vs Cats) built with Cloudflare Workers, Durable Objects, WebSocket hibernation, and React/TypeScript frontend.
 
-Currently, two official plugins are available:
+This project demonstrates how to build real-time features using raw Cloudflare Workers APIs, replacing the abstractions from rwsdk with direct implementations.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Project Setup
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Step 1: Initial Project Creation ✅
+**Command used:** 
+```bash
+npx create-cloudflare cloudflare-realtime-app --framework react --typescript --git
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Options selected:**
+- Framework: React
+- Variant: TypeScript  
+- Platform: Workers with Assets
+- Deploy: No (will deploy later)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**What was created:**
+- React 19 + TypeScript frontend with Vite
+- Cloudflare Workers backend (`worker/index.ts`)
+- @cloudflare/vite-plugin integration
+- Wrangler 4.35 configuration
+- ESLint setup
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**Commit:** `1e97df3` - Initial Cloudflare Workers + React project setup
+
+---
+
+## Implementation Progress
+
+### Step 2: README Documentation ✅
+- [x] Document initial project setup
+- [x] Update with step-by-step progress
+
+**Commands run:**
+- `git add .` - Stage all files
+- `git commit -m "Initial Cloudflare Workers + React project setup"` - Initial commit
+
+### Step 3: Backend Configuration ✅
+- [x] Update wrangler.jsonc with D1 database binding
+- [x] Add Durable Objects configuration for real-time features
+- [x] Create D1 migration for votes storage
+
+**What was implemented:**
+- Added `VOTING_DURABLE_OBJECT` and `REALTIME_DURABLE_OBJECT` bindings in wrangler.jsonc
+- Added D1 database binding configuration
+- Created `migrations/0001_votes.sql` with votes table schema
+- Added migration configuration for Durable Object deployments
+
+### Step 4: Durable Objects Implementation ✅
+- [x] Create `VotingDurableObject` with vote persistence
+- [x] Implement `RealtimeDurableObject` with WebSocket hibernation
+- [x] Add WebSocket connection management
+
+**What was implemented:**
+- `worker/durable-objects/VotingDurableObject.ts` - Handles vote counting with D1 persistence
+- `worker/durable-objects/RealtimeDurableObject.ts` - WebSocket hibernation for real-time updates
+- Proper fetch-based API for Durable Object communication
+- Session management and WebSocket lifecycle handling
+
+### Step 5: Worker API Routes ✅
+- [x] Replace basic worker with real-time routing
+- [x] Add vote endpoints (`/api/vote/dog`, `/api/vote/cat`)
+- [x] Add WebSocket upgrade endpoint (`/ws`)
+- [x] Add get votes endpoint (`/api/votes`)
+
+**What was implemented:**
+- Replaced `worker/index.ts` with complete real-time API routing
+- Vote endpoints that update Durable Objects and broadcast to WebSocket clients
+- WebSocket upgrade handling via RealtimeDurableObject
+- Health check and reset endpoints for testing
+
+**Commands run:**
+- `npm run cf-typegen` - Generate TypeScript types for Durable Object bindings
+- `npm run build` - Test compilation and build process
+
+### Step 6: Frontend Real-Time Features ⏳
+- [x] Create custom WebSocket hook (replace rwsdk client)
+- [ ] Port VotingApp component from rwsdk version
+- [ ] Port VotingButtons component from rwsdk version
+- [ ] Replace default App.tsx with voting interface
+
+**What was implemented:**
+- `src/hooks/useWebSocket.ts` - Custom hook replacing rwsdk/realtime/client
+- Auto-reconnection logic with exponential backoff
+- Real-time vote update handling
+- WebSocket connection management and error handling
+
+### Step 7: Testing & Deployment
+- [ ] Test real-time voting with multiple clients
+- [ ] Verify vote persistence
+- [ ] Deploy to Cloudflare Workers
+
+---
+
+## Architecture Overview
+
+### Backend (Cloudflare Workers)
+- **Main Worker** (`worker/index.ts`): HTTP routing + WebSocket upgrades
+- **VotingDurableObject**: Vote counting with D1 persistence
+- **RealtimeDurableObject**: WebSocket coordination with hibernation
+- **D1 Database**: Persistent vote storage
+
+### Frontend (React/TypeScript)
+- **VotingApp**: Main voting interface
+- **VotingButtons**: Vote interaction buttons
+- **useWebSocket**: Custom hook for real-time updates
+- **Vite + @cloudflare/vite-plugin**: Build system
+
+### Key Replacements from rwsdk
+- `rwsdk/realtime/client` → Custom WebSocket hook
+- `rwsdk/realtime/durableObject` → Custom WebSocket hibernation
+- `rwsdk/worker` routing → Raw Cloudflare Workers routing
+- Automatic re-rendering → Manual WebSocket broadcasts
+
+---
+
+## Development Commands
+
+```bash
+npm run dev        # Start development server
+npm run build      # Build for production  
+npm run deploy     # Deploy to Cloudflare Workers
+npm run lint       # Run ESLint
+```
+
+## Database Setup
+
+```bash
+# Create D1 database
+npx wrangler d1 create realtime-voting-db
+
+# Apply migrations (local)
+npx wrangler d1 migrations apply realtime-voting-db --local
+
+# Apply migrations (production)
+npx wrangler d1 migrations apply realtime-voting-db --remote
 ```
