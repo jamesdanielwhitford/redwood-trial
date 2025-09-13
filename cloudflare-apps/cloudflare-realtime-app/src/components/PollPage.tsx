@@ -51,11 +51,7 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
 
   if (loading) {
     return (
-      <div style={{ 
-        textAlign: "center", 
-        padding: "2rem",
-        fontFamily: "system-ui, -apple-system, sans-serif"
-      }}>
+      <div className="loading-container">
         Loading poll...
       </div>
     );
@@ -63,23 +59,12 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
 
   if (error) {
     return (
-      <div style={{ 
-        textAlign: "center", 
-        padding: "2rem",
-        fontFamily: "system-ui, -apple-system, sans-serif"
-      }}>
-        <h1>Error</h1>
-        <p>{error}</p>
+      <div className="error-container">
+        <h1 className="error-title">Error</h1>
+        <p className="error-message">{error}</p>
         <button
           onClick={onBack}
-          style={{
-            background: "#6c757d",
-            color: "white",
-            padding: "0.5rem 1rem",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
+          className="poll-back-button"
         >
           Go Back
         </button>
@@ -100,84 +85,42 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
   const totalVotes = choicesWithVotes.reduce((sum, choice) => sum + choice.votes, 0);
 
   return (
-    <div style={{ 
-      textAlign: "center", 
-      padding: "2rem", 
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      maxWidth: "800px",
-      margin: "0 auto"
-    }}>
-      <h1 style={{ 
-        fontSize: "2.5rem", 
-        marginBottom: "1rem", 
-        color: "#333" 
-      }}>
+    <div className="poll-page-container">
+      <h1 className="poll-title">
         {poll.title}
       </h1>
-      
-      <p style={{ 
-        fontSize: "1.1rem", 
-        marginBottom: "1rem", 
-        color: "#666" 
-      }}>
+
+      <p className="poll-subtitle">
         Vote and watch the results update live!
       </p>
 
-      
-      <div style={{ 
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "1.5rem", 
-        marginBottom: "2rem"
-      }}>
+
+      <div className="poll-choices-grid">
         {choicesWithVotes.map(choice => {
           const percentage = totalVotes > 0 ? Math.round((choice.votes / totalVotes) * 100) : 0;
-          
+
           return (
-            <div key={choice.id} style={{
-              background: "#f8f9fa",
-              border: `3px solid ${choice.color}`,
-              borderRadius: "12px",
-              padding: "1.5rem",
-              position: "relative"
+            <div key={choice.id} className="poll-choice-card" style={{
+              border: `3px solid ${choice.color}`
             }}>
-              <h2 style={{ 
-                fontSize: "1.3rem", 
-                margin: "0 0 1rem 0", 
-                color: choice.color,
-                fontWeight: "600"
+              <h2 className="poll-choice-title" style={{
+                color: choice.color
               }}>
                 {choice.text}
               </h2>
-              <div style={{ 
-                fontSize: "2.5rem", 
-                fontWeight: "bold", 
-                color: choice.color,
-                marginBottom: "0.5rem"
+              <div className="poll-choice-votes" style={{
+                color: choice.color
               }}>
                 {choice.votes}
               </div>
-              <div style={{ 
-                fontSize: "1.1rem", 
-                color: "#666",
-                marginBottom: "1rem"
-              }}>
+              <div className="poll-choice-percentage">
                 {percentage}%
               </div>
-              
-              {/* Progress bar */}
-              <div style={{
-                width: "100%",
-                height: "8px",
-                background: "#e9ecef",
-                borderRadius: "4px",
-                overflow: "hidden"
-              }}>
-                <div style={{
+
+              <div className="poll-progress-bar">
+                <div className="poll-progress-fill" style={{
                   width: `${percentage}%`,
-                  height: "100%",
-                  background: choice.color,
-                  transition: "width 0.3s ease"
+                  background: choice.color
                 }} />
               </div>
             </div>
@@ -187,25 +130,15 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
       
       <VoteButtons pollId={pollId} choices={choicesWithVotes} />
       
-      <p style={{ 
-        marginTop: "2rem", 
-        color: "#999",
-        fontSize: "0.9rem"
-      }}>
+      <p className="poll-stats">
         Total votes: {totalVotes} • Results update live across all devices!
       </p>
-      
+
       <div style={{ marginTop: "2rem" }}>
         <button
           onClick={onBack}
+          className="poll-back-button"
           style={{
-            background: "#6c757d",
-            color: "white",
-            padding: "0.5rem 1rem",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            cursor: "pointer",
             marginRight: "1rem"
           }}
         >

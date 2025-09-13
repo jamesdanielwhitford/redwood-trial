@@ -63,100 +63,59 @@ export function UserDashboard({ user, onLogout, onNavigateToPoll }: UserDashboar
   };
 
   return (
-    <div style={{
-      padding: "2rem",
-      maxWidth: "800px",
-      margin: "0 auto",
-      fontFamily: "system-ui, -apple-system, sans-serif"
-    }}>
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "2rem"
-      }}>
-        <h1 style={{ margin: 0 }}>Your Voting Polls</h1>
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <span style={{ color: "#666" }}>Welcome, {user.username}!</span>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Your Voting Polls</h1>
+        <div className="dashboard-user-info">
+          <span className="dashboard-username">Welcome, {user.username}!</span>
           <button
             onClick={handleLogout}
-            style={{
-              background: "#dc3545",
-              color: "white",
-              padding: "0.5rem 1rem",
-              border: "none",
-              borderRadius: "4px",
-              fontSize: "0.9rem",
-              cursor: "pointer"
-            }}
+            className="logout-button"
           >
             Logout
           </button>
         </div>
       </div>
 
-      <p style={{ color: "#666", marginBottom: "2rem" }}>
+      <p className="dashboard-description">
         Create custom voting polls with multiple choices and colors. Share polls with others and watch results update in real-time!
       </p>
 
       <PollForm onPollCreated={fetchPolls} />
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+        <div className="centered-content">
           Loading polls...
         </div>
       ) : polls.length > 0 ? (
         <div>
           <h2 style={{ marginTop: "3rem", marginBottom: "1rem" }}>Your Polls</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="poll-list">
             {polls.map(poll => {
               const totalVotes = poll.choices.reduce((sum, choice) => sum + choice.votes, 0);
 
               return (
-                <div key={poll.id} style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  padding: "1rem",
-                  background: "white"
-                }}>
-                  <h3 style={{ margin: "0 0 0.5rem 0", color: "#333" }}>
+                <div key={poll.id} className="poll-list-item">
+                  <h3 className="poll-list-title">
                     {poll.title}
                   </h3>
-                  <div style={{
-                    display: "flex",
-                    gap: "0.5rem",
-                    marginBottom: "1rem",
-                    flexWrap: "wrap"
-                  }}>
+                  <div className="poll-choices-preview">
                     {poll.choices.map(choice => (
-                      <span key={choice.id} style={{
-                        background: choice.color,
-                        color: "white",
-                        padding: "0.25rem 0.5rem",
-                        borderRadius: "12px",
-                        fontSize: "0.8rem",
-                        fontWeight: "500"
+                      <span key={choice.id} className="poll-choice-tag" style={{
+                        background: choice.color
                       }}>
                         {choice.text}: {choice.votes} votes
                       </span>
                     ))}
                   </div>
-                  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                  <div className="poll-actions">
                     <button
                       onClick={() => onNavigateToPoll(poll.id)}
-                      style={{
-                        background: "#007cba",
-                        color: "white",
-                        padding: "0.5rem 1rem",
-                        border: "none",
-                        borderRadius: "4px",
-                        fontSize: "0.9rem",
-                        cursor: "pointer"
-                      }}
+                      className="poll-view-button"
                     >
                       View & Vote →
                     </button>
-                    <span style={{ color: "#666", fontSize: "0.9rem" }}>
+                    <span className="poll-vote-count">
                       {totalVotes} total votes
                     </span>
                   </div>
@@ -166,12 +125,7 @@ export function UserDashboard({ user, onLogout, onNavigateToPoll }: UserDashboar
           </div>
         </div>
       ) : (
-        <div style={{
-          textAlign: "center",
-          padding: "2rem",
-          color: "#666",
-          marginTop: "2rem"
-        }}>
+        <div className="centered-content">
           <p>You haven't created any polls yet. Use the form above to create your first poll!</p>
         </div>
       )}

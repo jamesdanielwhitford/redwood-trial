@@ -75,13 +75,7 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
+      <div className="loading-container">
         Loading...
       </div>
     )

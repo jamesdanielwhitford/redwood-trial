@@ -5,16 +5,10 @@ import { PollForm } from "./polls/PollForm";
 export async function Home({ ctx }: RequestInfo) {
   if (!ctx.user) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
+      <div className="loading-container">
         <h1>Voting Polls</h1>
         <p>Please log in to create and manage your polls.</p>
-        <a href="/user/login" style={{ 
-          background: "#007cba", 
-          color: "white", 
-          padding: "0.5rem 1rem", 
-          textDecoration: "none", 
-          borderRadius: "4px" 
-        }}>
+        <a href="/user/login" className="login-link">
           Login
         </a>
       </div>
@@ -24,32 +18,15 @@ export async function Home({ ctx }: RequestInfo) {
   const polls = await getUserPolls(ctx.user.id);
 
   return (
-    <div style={{ 
-      padding: "2rem", 
-      maxWidth: "800px", 
-      margin: "0 auto",
-      fontFamily: "system-ui, -apple-system, sans-serif"
-    }}>
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "2rem"
-      }}>
-        <h1 style={{ margin: 0 }}>Your Voting Polls</h1>
-        <a href="/user/logout" style={{ 
-          background: "#dc3545", 
-          color: "white", 
-          padding: "0.5rem 1rem", 
-          textDecoration: "none", 
-          borderRadius: "4px",
-          fontSize: "0.9rem"
-        }}>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Your Voting Polls</h1>
+        <a href="/user/logout" className="logout-link">
           Logout
         </a>
       </div>
-      
-      <p style={{ color: "#666", marginBottom: "2rem" }}>
+
+      <p className="dashboard-description">
         Welcome, {ctx.user.username}! Create new voting polls and share them with others.
       </p>
 
@@ -58,49 +35,26 @@ export async function Home({ ctx }: RequestInfo) {
       {polls.length > 0 ? (
         <div>
           <h2 style={{ marginTop: "3rem", marginBottom: "1rem" }}>Your Polls</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="poll-list">
             {polls.map(poll => (
-              <div key={poll.id} style={{
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                padding: "1rem",
-                background: "white"
-              }}>
-                <h3 style={{ margin: "0 0 0.5rem 0", color: "#333" }}>
+              <div key={poll.id} className="poll-list-item">
+                <h3 className="poll-list-title">
                   {poll.title}
                 </h3>
-                <div style={{ 
-                  display: "flex", 
-                  gap: "0.5rem", 
-                  marginBottom: "1rem",
-                  flexWrap: "wrap"
-                }}>
+                <div className="poll-choices-preview">
                   {poll.choices.map(choice => (
-                    <span key={choice.id} style={{
-                      background: choice.color,
-                      color: "white",
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "12px",
-                      fontSize: "0.8rem",
-                      fontWeight: "500"
+                    <span key={choice.id} className="poll-choice-tag" style={{
+                      background: choice.color
                     }}>
                       {choice.text}: {choice.votes} votes
                     </span>
                   ))}
                 </div>
-                <a 
+                <a
                   href={`/poll/${poll.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    background: "#007cba",
-                    color: "white",
-                    padding: "0.5rem 1rem",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    fontSize: "0.9rem",
-                    display: "inline-block"
-                  }}
+                  className="poll-view-link"
                 >
                   View Poll →
                 </a>
@@ -109,12 +63,7 @@ export async function Home({ ctx }: RequestInfo) {
           </div>
         </div>
       ) : (
-        <div style={{ 
-          textAlign: "center", 
-          padding: "2rem", 
-          color: "#666",
-          marginTop: "2rem"
-        }}>
+        <div className="centered-content">
           <p>You haven't created any polls yet. Use the form above to create your first poll!</p>
         </div>
       )}

@@ -83,22 +83,12 @@ export function PollForm() {
   };
 
   return (
-    <div style={{
-      border: "1px solid #ddd",
-      borderRadius: "8px",
-      padding: "1.5rem",
-      background: "white",
-      marginBottom: "2rem"
-    }}>
-      <h2 style={{ marginTop: 0, marginBottom: "1rem" }}>Create New Poll</h2>
-      
+    <div className="poll-form-container">
+      <h2 className="poll-form-title">Create New Poll</h2>
+
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ 
-            display: "block", 
-            marginBottom: "0.5rem", 
-            fontWeight: "500" 
-          }}>
+        <div className="poll-form-section">
+          <label className="poll-form-label">
             Poll Title:
           </label>
           <input
@@ -106,117 +96,62 @@ export function PollForm() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What would you like to ask?"
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              fontSize: "1rem"
-            }}
+            className="poll-form-input"
           />
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ 
-            display: "block", 
-            marginBottom: "0.5rem", 
-            fontWeight: "500" 
-          }}>
+        <div className="poll-form-section">
+          <label className="poll-form-label">
             Choices:
           </label>
           {choices.map((choice, index) => (
-            <div key={index} style={{ 
-              display: "flex", 
-              gap: "0.5rem", 
-              marginBottom: "0.5rem",
-              alignItems: "center"
-            }}>
+            <div key={index} className="poll-form-input-flex">
               <input
                 type="text"
                 value={choice.text}
                 onChange={(e) => updateChoice(index, "text", e.target.value)}
                 placeholder={`Choice ${index + 1}`}
-                style={{
-                  flex: 1,
-                  padding: "0.5rem",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px"
-                }}
+                className="poll-form-input-text"
               />
               <input
                 type="color"
                 value={choice.color}
                 onChange={(e) => updateChoice(index, "color", e.target.value)}
-                style={{
-                  width: "50px",
-                  height: "38px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                }}
+                className="poll-form-color-input"
               />
               {choices.length > 2 && (
                 <button
                   type="button"
                   onClick={() => removeChoice(index)}
-                  style={{
-                    background: "#dc3545",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    padding: "0.5rem",
-                    cursor: "pointer",
-                    fontSize: "0.8rem"
-                  }}
+                  className="poll-form-button-danger"
                 >
                   Remove
                 </button>
               )}
             </div>
           ))}
-          
+
           <button
             type="button"
             onClick={addChoice}
             disabled={choices.length >= 8}
-            style={{
-              background: "#28a745",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              marginTop: "0.5rem",
-              opacity: choices.length >= 8 ? 0.6 : 1
-            }}
+            className={`poll-form-button-secondary ${choices.length >= 8 ? 'disabled' : ''}`}
           >
             Add Choice ({choices.length}/8)
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div className="poll-form-actions">
           <button
             type="submit"
             disabled={isPending}
-            style={{
-              background: "#007cba",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              padding: "0.75rem 1.5rem",
-              cursor: "pointer",
-              fontSize: "1rem",
-              opacity: isPending ? 0.6 : 1
-            }}
+            className={`poll-form-button-primary ${isPending ? 'disabled' : ''}`}
           >
             {isPending ? "Creating..." : "Create Poll"}
           </button>
-          
+
           {result && (
-            <span style={{
-              color: result.includes("successfully") ? "#28a745" : "#dc3545",
-              fontWeight: "500"
-            }}>
+            <span className={`poll-form-result ${result.includes("successfully") ? 'success' : 'error'}`}>
               {result}
             </span>
           )}

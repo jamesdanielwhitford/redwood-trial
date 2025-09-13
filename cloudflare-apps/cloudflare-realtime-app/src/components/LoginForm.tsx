@@ -46,22 +46,14 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   };
 
   return (
-    <div style={{
-      maxWidth: '400px',
-      margin: '2rem auto',
-      padding: '2rem',
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      background: 'white',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
-      <h2 style={{ marginTop: 0, textAlign: 'center' }}>
+    <div className="login-form-container">
+      <h2 className="login-title">
         {isRegistering ? 'Create Account' : 'Login'}
       </h2>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+        <div className="login-section">
+          <label className="login-label">
             Username:
           </label>
           <input
@@ -69,19 +61,12 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              boxSizing: 'border-box'
-            }}
+            className="login-input"
           />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+        <div className="login-section">
+          <label className="login-label">
             Password:
           </label>
           <input
@@ -89,27 +74,12 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              boxSizing: 'border-box'
-            }}
+            className="login-input"
           />
         </div>
 
         {error && (
-          <div style={{
-            color: '#dc3545',
-            marginBottom: '1rem',
-            padding: '0.5rem',
-            background: '#f8d7da',
-            border: '1px solid #f5c6cb',
-            borderRadius: '4px',
-            fontSize: '0.9rem'
-          }}>
+          <div className="login-error">
             {error}
           </div>
         )}
@@ -117,18 +87,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
         <button
           type="submit"
           disabled={loading || !username || !password}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            background: '#007cba',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '1rem',
-            cursor: loading ? 'default' : 'pointer',
-            opacity: (loading || !username || !password) ? 0.6 : 1,
-            marginBottom: '1rem'
-          }}
+          className={`login-button-primary ${(loading || !username || !password) ? 'disabled' : ''}`}
         >
           {loading ? 'Please wait...' : (isRegistering ? 'Create Account' : 'Login')}
         </button>
@@ -139,16 +98,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             setIsRegistering(!isRegistering);
             setError('');
           }}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            background: 'transparent',
-            color: '#007cba',
-            border: '1px solid #007cba',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '0.9rem'
-          }}
+          className="login-button-secondary"
         >
           {isRegistering ? 'Already have an account? Login' : 'Need an account? Register'}
         </button>

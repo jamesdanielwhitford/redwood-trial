@@ -36,32 +36,17 @@ export function VoteButtons({ pollId, choices }: VoteButtonsProps) {
   };
 
   return (
-    <div style={{ 
-      display: "flex", 
-      gap: "1rem", 
-      justifyContent: "center",
-      flexWrap: "wrap",
-      marginBottom: "2rem"
-    }}>
+    <div className="vote-buttons-container">
       {choices.map(choice => (
         <button
           key={choice.id}
           onClick={() => handleVote(choice.id)}
           disabled={isPending}
+          className="vote-button"
           style={{
             background: choice.color,
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            padding: "1rem 2rem",
-            fontSize: "1.1rem",
-            fontWeight: "600",
-            cursor: "pointer",
             opacity: isPending ? 0.6 : 1,
-            transform: lastVoted === choice.id ? "scale(1.05)" : "scale(1)",
-            transition: "all 0.2s ease",
-            minWidth: "120px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            transform: lastVoted === choice.id ? "scale(1.05)" : "scale(1)"
           }}
           onMouseOver={(e) => {
             if (!isPending) {
