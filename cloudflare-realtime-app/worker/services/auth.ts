@@ -3,7 +3,6 @@ import { generateId } from "../utils";
 export interface User {
   id: string;
   username: string;
-  email: string;
   created_at: string;
 }
 
@@ -17,39 +16,68 @@ export interface Session {
 export class AuthService {
   constructor(private db: D1Database) {}
 
-  // Create a new user
-  async createUser(username: string, email: string): Promise<User> {
-    const userId = generateId();
-    const now = new Date().toISOString();
-
-    await this.db.prepare(`
-      INSERT INTO users (id, username, email, created_at)
-      VALUES (?, ?, ?, ?)
-    `).bind(userId, username, email, now).run();
-
-    return {
-      id: userId,
-      username,
-      email,
-      created_at: now
-    };
+  // Simple password hashing (for demo purposes - in production use proper hashing)
+  private async hashPassword(password: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + "DEMO_SALT");
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  // Find user by email
-  async findUserByEmail(email: string): Promise<User | null> {
-    const result = await this.db.prepare(`
-      SELECT id, username, email, created_at
-      FROM users
-      WHERE email = ?
-    `).bind(email).first();
+  // Register a new user
+  async register(username: string, password: string): Promise<User | { error: string }> {
+    try {
+      // Check if user exists
+      const existingUser = await this.findUserByUsername(username);
+      if (existingUser) {
+        return { error: "Username already exists" };
+      }
 
-    return result as User | null;
+      const userId = generateId();
+      const hashedPassword = await this.hashPassword(password);
+      const now = new Date().toISOString();
+
+      await this.db.prepare(`
+        INSERT INTO users (id, username, password_hash, created_at)
+        VALUES (?, ?, ?, ?)
+      `).bind(userId, username, hashedPassword, now).run();
+
+      return {
+        id: userId,
+        username,
+        created_at: now
+      };
+    } catch (error) {
+      return { error: "Registration failed" };
+    }
+  }
+
+  // Login user
+  async login(username: string, password: string): Promise<User | { error: string }> {
+    try {
+      const hashedPassword = await this.hashPassword(password);
+
+      const result = await this.db.prepare(`
+        SELECT id, username, created_at
+        FROM users
+        WHERE username = ? AND password_hash = ?
+      `).bind(username, hashedPassword).first();
+
+      if (!result) {
+        return { error: "Invalid username or password" };
+      }
+
+      return result as User;
+    } catch (error) {
+      return { error: "Login failed" };
+    }
   }
 
   // Find user by username
   async findUserByUsername(username: string): Promise<User | null> {
     const result = await this.db.prepare(`
-      SELECT id, username, email, created_at
+      SELECT id, username, created_at
       FROM users
       WHERE username = ?
     `).bind(username).first();
@@ -60,7 +88,7 @@ export class AuthService {
   // Find user by ID
   async findUserById(userId: string): Promise<User | null> {
     const result = await this.db.prepare(`
-      SELECT id, username, email, created_at
+      SELECT id, username, created_at
       FROM users
       WHERE id = ?
     `).bind(userId).first();
@@ -105,13 +133,6 @@ export class AuthService {
     await this.db.prepare(`
       DELETE FROM sessions WHERE id = ?
     `).bind(sessionId).run();
-  }
-
-  // Clean up expired sessions
-  async cleanupExpiredSessions(): Promise<void> {
-    await this.db.prepare(`
-      DELETE FROM sessions WHERE expires_at <= datetime('now')
-    `).run();
   }
 
   // Get user from session cookie

@@ -1,9 +1,6 @@
 "use server";
 
 import { db } from "@/db";
-import { redirect } from "rwsdk/server";
-import { env } from "cloudflare:workers";
-import { v4 as uuidv4 } from "uuid";
 
 export type CreatePollData = {
   title: string;
@@ -11,7 +8,7 @@ export type CreatePollData = {
 };
 
 export const createPoll = async (userId: string, data: CreatePollData) => {
-  const pollId = uuidv4();
+  const pollId = crypto.randomUUID();
   
   const poll = await db.poll.create({
     data: {
@@ -20,7 +17,7 @@ export const createPoll = async (userId: string, data: CreatePollData) => {
       createdBy: userId,
       choices: {
         create: data.choices.map(choice => ({
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           text: choice.text,
           color: choice.color,
           votes: 0

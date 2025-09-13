@@ -1,6 +1,6 @@
 import { PollDurableObject } from "./durable-objects/PollDurableObject";
 import { RealtimeDurableObject } from "./durable-objects/RealtimeDurableObject";
-import { SimpleAuthService, User } from "./services/simpleAuth";
+import { AuthService, type User } from "./services/auth";
 import { generateId } from "./utils";
 
 // Export Durable Objects
@@ -62,7 +62,7 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
       return new Response("Username and password required", { status: 400 });
     }
 
-    const auth = new SimpleAuthService(env.DB);
+    const auth = new AuthService(env.DB);
     const result = await auth.register(username, password);
 
     if ('error' in result) {
@@ -99,7 +99,7 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
       return new Response("Username and password required", { status: 400 });
     }
 
-    const auth = new SimpleAuthService(env.DB);
+    const auth = new AuthService(env.DB);
     const result = await auth.login(username, password);
 
     if ('error' in result) {
@@ -129,7 +129,7 @@ async function handleLogout(request: Request, env: Env): Promise<Response> {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const auth = new SimpleAuthService(env.DB);
+  const auth = new AuthService(env.DB);
   const user = await auth.getUserFromCookie(request.headers.get("Cookie"));
 
   if (user) {
@@ -203,7 +203,7 @@ async function handlePollVote(request: Request, env: Env, pollId: string, choice
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    const auth = new SimpleAuthService(env.DB);
+    const auth = new AuthService(env.DB);
 
     // Get current user from session
     const currentUser = await auth.getUserFromCookie(request.headers.get("Cookie"));

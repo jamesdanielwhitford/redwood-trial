@@ -41,7 +41,7 @@
 		{
 			"tag": "v1",
 			"new_sqlite_classes": [
-				"VotingDurableObject",
+				"PollDurableObject",
 				"RealtimeDurableObject"
 			]
 		},
