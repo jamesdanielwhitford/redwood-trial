@@ -106,18 +106,8 @@ export default defineApp([
     }
   }),
   render(Document, [
+    route("/", [ isAuthenticated, Home ]),
     index([isAuthenticated, Home]),
-    route("/protected", [
-      ({ ctx }) => {
-        if (!ctx.user) {
-          return new Response(null, {
-            status: 302,
-            headers: { Location: "/user/login" },
-          });
-        }
-      },
-      Home,
-    ]),
     route("/poll/:pollId", Poll),
     prefix("/user", userRoutes),
   ]),
