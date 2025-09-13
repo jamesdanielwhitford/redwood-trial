@@ -30,7 +30,7 @@ export function Login() {
     if (!success) {
       setResult("Login failed");
     } else {
-      setResult("Login successful!");
+      window.location.href = "/";
     }
   };
 
