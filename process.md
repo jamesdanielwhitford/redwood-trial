@@ -147,3 +147,15 @@ npm install uuid
 
   This solution maintains all security properties while working around the
   RSC action cookie limitation.
+
+
+
+
+
+
+
+cloudflare auth:
+
+```
+cd cloudflare-realtime-app && npx wrangler d1 migrations apply DB --local 
+```

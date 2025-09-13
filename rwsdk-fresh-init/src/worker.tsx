@@ -1,5 +1,5 @@
 import { defineApp, ErrorResponse } from "rwsdk/worker";
-import { index, route, render, prefix } from "rwsdk/router";
+import { route, render, prefix } from "rwsdk/router";
 import { Document } from "@/app/Document";
 import { Home } from "@/app/pages/Home";
 import { setCommonHeaders } from "@/app/headers";
@@ -8,24 +8,19 @@ import { sessions, setupSessionStore } from "./session/store";
 import { Session } from "./session/durableObject";
 import { type User, db, setupDb } from "@/db";
 import { env } from "cloudflare:workers";
+import { realtimeRoute } from "rwsdk/realtime/worker";
+
 export { SessionDurableObject } from "./session/durableObject";
+export { RealtimeDurableObject } from "rwsdk/realtime/durableObject";
 
 export type AppContext = {
   session: Session | null;
   user: User | null;
 };
 
-const isAuthenticated = ({ ctx }: { ctx: AppContext}) => {
-  if (!ctx.user) {
-    return new Response(null, {
-      status: 302,
-      headers: { Location: "/user/login" },
-    });
-  }
-}
-
 export default defineApp([
   setCommonHeaders(),
+  realtimeRoute(() => env.REALTIME_DURABLE_OBJECT),
   async ({ ctx, request, headers }) => {
     await setupDb(env);
     setupSessionStore(env);
@@ -55,8 +50,18 @@ export default defineApp([
     }
   },
   render(Document, [
-    route("/", [ isAuthenticated, Home ]),
-    index([isAuthenticated, Home]),
+    route("/", () => new Response("Hello, World!")),
+    route("/protected", [
+      ({ ctx }) => {
+        if (!ctx.user) {
+          return new Response(null, {
+            status: 302,
+            headers: { Location: "/user/login" },
+          });
+        }
+      },
+      Home,
+    ]),
     prefix("/user", userRoutes),
   ]),
 ]);

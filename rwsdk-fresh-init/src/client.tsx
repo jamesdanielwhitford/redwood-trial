@@ -1,3 +1,10 @@
-import { initClient } from "rwsdk/client";
+// import { initClient } from "rwsdk/client";
 
-initClient();
+import { initRealtimeClient } from "rwsdk/realtime/client";
+
+// initClient();
+
+// Initialize realtime client with current pathname as key
+initRealtimeClient({
+  key: window.location.pathname,
+});

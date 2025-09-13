@@ -14,10 +14,12 @@ import { db } from "@/db";
 import { env } from "cloudflare:workers";
 
 function getWebAuthnConfig(request: Request) {
+  console.log("getWebAuthnConfig: request.url", request.url);
   const rpID = env.WEBAUTHN_RP_ID ?? new URL(request.url).hostname;
   const rpName = import.meta.env.VITE_IS_DEV_SERVER
     ? "Development App"
     : env.WEBAUTHN_APP_NAME;
+  console.log("getWebAuthnConfig: rpID", rpID, "rpName", rpName);
   return {
     rpName,
     rpID,
@@ -25,6 +27,7 @@ function getWebAuthnConfig(request: Request) {
 }
 
 export async function startPasskeyRegistration(username: string) {
+  console.log("startPasskeyRegistration: username", username);
   const { rpName, rpID } = getWebAuthnConfig(requestInfo.request);
   const { response } = requestInfo;
 
@@ -40,12 +43,16 @@ export async function startPasskeyRegistration(username: string) {
     },
   });
 
+  console.log("startPasskeyRegistration: options", options);
+  console.log("startPasskeyRegistration: response.headers BEFORE save", Object.fromEntries(response.headers.entries()));
   await sessions.save(response.headers, { challenge: options.challenge });
+  console.log("startPasskeyRegistration: response.headers AFTER save", Object.fromEntries(response.headers.entries()));
 
   return options;
 }
 
 export async function startPasskeyLogin() {
+  console.log("startPasskeyLogin");
   const { rpID } = getWebAuthnConfig(requestInfo.request);
   const { response } = requestInfo;
 
@@ -55,7 +62,10 @@ export async function startPasskeyLogin() {
     allowCredentials: [],
   });
 
+  console.log("startPasskeyLogin: options", options);
+  console.log("startPasskeyLogin: response.headers BEFORE save", Object.fromEntries(response.headers.entries()));
   await sessions.save(response.headers, { challenge: options.challenge });
+  console.log("startPasskeyLogin: response.headers AFTER save", Object.fromEntries(response.headers.entries()));
 
   return options;
 }
@@ -64,11 +74,16 @@ export async function finishPasskeyRegistration(
   username: string,
   registration: RegistrationResponseJSON,
 ) {
+  console.log("finishPasskeyRegistration: username", username);
+  console.log("finishPasskeyRegistration: registration", registration);
   const { request, response } = requestInfo;
   const { origin } = new URL(request.url);
 
+  console.log("finishPasskeyRegistration: request.headers BEFORE load", Object.fromEntries(request.headers.entries()));
   const session = await sessions.load(request);
   const challenge = session?.challenge;
+  console.log("finishPasskeyRegistration: session", session);
+  console.log("finishPasskeyRegistration: challenge", challenge);
 
   if (!challenge) {
     return false;
@@ -81,6 +96,8 @@ export async function finishPasskeyRegistration(
     expectedRPID: env.WEBAUTHN_RP_ID || new URL(request.url).hostname,
   });
 
+  console.log("finishPasskeyRegistration: verification", verification);
+
   if (!verification.verified || !verification.registrationInfo) {
     return false;
   }
@@ -92,6 +109,8 @@ export async function finishPasskeyRegistration(
       username,
     },
   });
+
+  console.log("finishPasskeyRegistration: user", user);
 
   await db.credential.create({
     data: {
@@ -106,11 +125,15 @@ export async function finishPasskeyRegistration(
 }
 
 export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {
+  console.log("finishPasskeyLogin: login", login);
   const { request, response } = requestInfo;
   const { origin } = new URL(request.url);
 
+  console.log("finishPasskeyLogin: request.headers BEFORE load", Object.fromEntries(request.headers.entries()));
   const session = await sessions.load(request);
   const challenge = session?.challenge;
+  console.log("finishPasskeyLogin: session", session);
+  console.log("finishPasskeyLogin: challenge", challenge);
 
   if (!challenge) {
     return false;
@@ -121,6 +144,7 @@ export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {
       credentialId: login.id,
     },
   });
+  console.log("finishPasskeyLogin: credential", credential);
 
   if (!credential) {
     return false;
@@ -138,6 +162,7 @@ export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {
       counter: credential.counter,
     },
   });
+  console.log("finishPasskeyLogin: verification", verification);
 
   if (!verification.verified) {
     return false;
@@ -157,6 +182,7 @@ export async function finishPasskeyLogin(login: AuthenticationResponseJSON) {
       id: credential.userId,
     },
   });
+  console.log("finishPasskeyLogin: user", user);
 
   if (!user) {
     return false;
