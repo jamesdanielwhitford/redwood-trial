@@ -1,16 +1,13 @@
 import { PollDurableObject } from "./durable-objects/PollDurableObject";
 import { RealtimeDurableObject } from "./durable-objects/RealtimeDurableObject";
+import { SimpleAuthService, User } from "./services/simpleAuth";
+import { generateId } from "./utils";
 
 // Export Durable Objects
 export { PollDurableObject, RealtimeDurableObject };
 
-// Helper function to generate unique IDs
-function generateId(): string {
-  return crypto.randomUUID();
-}
-
-// Handle poll creation
-async function createPoll(request: Request, env: Env): Promise<Response> {
+// Handle poll creation (requires authentication)
+async function createPoll(request: Request, env: Env, user: User): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -33,10 +30,10 @@ async function createPoll(request: Request, env: Env): Promise<Response> {
       votes: 0
     }));
 
-    // Save poll to database
+    // Save poll to database with user ownership
     await env.DB.prepare(`
-      INSERT INTO polls (id, title) VALUES (?, ?)
-    `).bind(pollId, data.title).run();
+      INSERT INTO polls (id, title, created_by) VALUES (?, ?, ?)
+    `).bind(pollId, data.title, user.id).run();
 
     // Save choices to database
     for (const choice of choices) {
@@ -50,6 +47,121 @@ async function createPoll(request: Request, env: Env): Promise<Response> {
     console.error("Error creating poll:", error);
     return new Response("Internal server error", { status: 500 });
   }
+}
+
+// Handle user registration
+async function handleRegister(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  try {
+    const { username, password } = await request.json();
+
+    if (!username || !password) {
+      return new Response("Username and password required", { status: 400 });
+    }
+
+    const auth = new SimpleAuthService(env.DB);
+    const result = await auth.register(username, password);
+
+    if ('error' in result) {
+      return new Response(result.error, { status: 400 });
+    }
+
+    // Create session
+    const session = await auth.createSession(result.id);
+    const cookie = auth.createSessionCookie(session.id);
+
+    return new Response(JSON.stringify({ user: result }), {
+      status: 201,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": cookie
+      }
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    return new Response("Registration failed", { status: 500 });
+  }
+}
+
+// Handle user login
+async function handleLogin(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  try {
+    const { username, password } = await request.json();
+
+    if (!username || !password) {
+      return new Response("Username and password required", { status: 400 });
+    }
+
+    const auth = new SimpleAuthService(env.DB);
+    const result = await auth.login(username, password);
+
+    if ('error' in result) {
+      return new Response(result.error, { status: 401 });
+    }
+
+    // Create session
+    const session = await auth.createSession(result.id);
+    const cookie = auth.createSessionCookie(session.id);
+
+    return new Response(JSON.stringify({ user: result }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": cookie
+      }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    return new Response("Login failed", { status: 500 });
+  }
+}
+
+// Handle user logout
+async function handleLogout(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  const auth = new SimpleAuthService(env.DB);
+  const user = await auth.getUserFromCookie(request.headers.get("Cookie"));
+
+  if (user) {
+    // Delete session from database
+    const cookies = parseCookies(request.headers.get("Cookie") || "");
+    const sessionId = cookies.session_id;
+    if (sessionId) {
+      await auth.deleteSession(sessionId);
+    }
+  }
+
+  const clearCookie = auth.clearSessionCookie();
+
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Set-Cookie": clearCookie
+    }
+  });
+}
+
+// Helper to parse cookies
+function parseCookies(cookieHeader: string): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, value] = cookie.trim().split('=');
+    if (name && value) {
+      cookies[name] = decodeURIComponent(value);
+    }
+  });
+  return cookies;
 }
 
 // Handle poll voting
@@ -91,6 +203,10 @@ async function handlePollVote(request: Request, env: Env, pollId: string, choice
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const auth = new SimpleAuthService(env.DB);
+
+    // Get current user from session
+    const currentUser = await auth.getUserFromCookie(request.headers.get("Cookie"));
 
     // Handle poll-specific WebSocket upgrade
     if (url.pathname.startsWith("/ws/")) {
@@ -98,27 +214,55 @@ export default {
       if (!pollId) {
         return new Response("Poll ID required for WebSocket", { status: 400 });
       }
-      
+
       const realtimeId = env.REALTIME_DURABLE_OBJECT.idFromName(`poll-${pollId}`);
       const realtimeObj = env.REALTIME_DURABLE_OBJECT.get(realtimeId);
       return realtimeObj.fetch(new Request(`${request.url.replace(url.pathname, "/ws")}`, request));
     }
 
-    // Create new poll
-    if (url.pathname === "/api/polls" && request.method === "POST") {
-      return createPoll(request, env);
+    // Authentication routes
+    if (url.pathname === "/api/auth/register") {
+      return handleRegister(request, env);
     }
 
-    // Get all polls
+    if (url.pathname === "/api/auth/login") {
+      return handleLogin(request, env);
+    }
+
+    if (url.pathname === "/api/auth/logout") {
+      return handleLogout(request, env);
+    }
+
+    // Get current user info
+    if (url.pathname === "/api/auth/me" && request.method === "GET") {
+      if (!currentUser) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      return Response.json({ user: currentUser });
+    }
+
+    // Create new poll (requires authentication)
+    if (url.pathname === "/api/polls" && request.method === "POST") {
+      if (!currentUser) {
+        return new Response("Authentication required", { status: 401 });
+      }
+      return createPoll(request, env, currentUser);
+    }
+
+    // Get user's polls (requires authentication)
     if (url.pathname === "/api/polls" && request.method === "GET") {
+      if (!currentUser) {
+        return new Response("Authentication required", { status: 401 });
+      }
       try {
         const result = await env.DB.prepare(`
           SELECT p.id, p.title, p.created_at,
                  c.id as choice_id, c.text as choice_text, c.color as choice_color, c.votes as choice_votes
           FROM polls p
           LEFT JOIN choices c ON p.id = c.poll_id
+          WHERE p.created_by = ?
           ORDER BY p.created_at DESC, c.id
-        `).all();
+        `).bind(currentUser.id).all();
 
         const pollsMap = new Map();
         

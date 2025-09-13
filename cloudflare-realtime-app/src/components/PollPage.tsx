@@ -25,7 +25,7 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
   const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { votes, isConnected } = useWebSocket(pollId);
+  const { votes } = useWebSocket(pollId);
 
   useEffect(() => {
     const fetchPoll = async () => {
@@ -39,7 +39,7 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
         } else {
           setError("Failed to load poll");
         }
-      } catch (err) {
+      } catch {
         setError("Error loading poll");
       } finally {
         setLoading(false);
@@ -123,17 +123,6 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
         Vote and watch the results update live!
       </p>
 
-      {/* Connection Status */}
-      <div style={{
-        marginBottom: "2rem",
-        padding: "0.5rem",
-        borderRadius: "4px",
-        backgroundColor: isConnected ? "#d4edda" : "#f8d7da",
-        color: isConnected ? "#155724" : "#721c24",
-        fontSize: "0.9rem"
-      }}>
-        {isConnected ? "🟢 Connected" : "🔴 Disconnected"}
-      </div>
       
       <div style={{ 
         display: "grid",
@@ -221,24 +210,6 @@ export function PollPage({ pollId, onBack }: PollPageProps) {
           }}
         >
           ← Back to Polls
-        </button>
-        <button
-          onClick={() => {
-            const url = `${window.location.origin}/#/poll/${pollId}`;
-            navigator.clipboard.writeText(url);
-            alert("Poll URL copied to clipboard!");
-          }}
-          style={{
-            background: "#007cba",
-            color: "white",
-            padding: "0.5rem 1rem",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "0.9rem",
-            cursor: "pointer"
-          }}
-        >
-          📋 Share Poll
         </button>
       </div>
     </div>

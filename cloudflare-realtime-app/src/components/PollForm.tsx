@@ -58,6 +58,7 @@ export function PollForm({ onPollCreated }: PollFormProps) {
       const response = await fetch("/api/polls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           title: title.trim(),
           choices: validChoices
