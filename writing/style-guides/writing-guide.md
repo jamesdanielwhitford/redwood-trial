@@ -616,3 +616,16 @@ Always write "frontend" and "backend" as single words.
 
 Internet
 Don't give "internet" an initial capital unless it appears at the start of a sentence.
+
+## Avoid Unsubstantiated General Claims
+
+Be extremely careful about making broad statements without evidence. Claims like "Most CRM systems treat customer interactions as isolated events" can immediately lose reader trust if they're inaccurate.
+
+**The problem:** Many CRMs actually do show interaction context and history - emails, support tickets, and live chat sessions together - specifically to solve the isolation problem you're claiming exists.
+
+**The solution:** Either provide evidence for general claims or focus on specific, concrete examples you can verify. Instead of "Most X do Y poorly," try:
+- "In my experience with [specific tools]..."
+- "When I tried [concrete example]..."
+- "Here's what happened when I..."
+
+**Why this matters:** Readers will immediately dismiss your article if you build it on strawman arguments. Technical readers especially can spot weak generalizations and will question your credibility throughout the rest of the piece.
